@@ -1,4 +1,7 @@
-use std::{fs::{self, rename}, collections::HashMap};
+use std::{
+    collections::HashMap,
+    fs::{self, rename},
+};
 
 use crate::helpers::cli::{cli_exec, cli_exec_from_dir};
 use base64::{engine::general_purpose, Engine as _};
@@ -24,7 +27,11 @@ impl From<crate::config::Chart> for Git {
 }
 
 impl Repo for Git {
-    fn pull(&self, workdir_path: String, vars: HashMap<String, String>) -> Result<ChartLocal, Box<dyn std::error::Error>> {
+    fn pull(
+        &self,
+        workdir_path: String,
+        vars: HashMap<String, String>,
+    ) -> Result<ChartLocal, Box<dyn std::error::Error>> {
         let repo_local_name = general_purpose::STANDARD_NO_PAD.encode(self.git_url.clone());
         let cmd = format!(
             "git clone {} {}/{}",

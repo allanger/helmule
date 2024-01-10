@@ -62,7 +62,12 @@ impl PatchInterface for YqPatch {
     fn apply(&self, chart_local_path: String) -> Result<(), Box<dyn std::error::Error>> {
         let cmd = match self.op {
             YqOperations::Add => {
-                let value = match self.value.clone().unwrap().starts_with(['{', '[', '\"', '\'']) {
+                let value = match self
+                    .value
+                    .clone()
+                    .unwrap()
+                    .starts_with(['{', '[', '\"', '\''])
+                {
                     true => self.value.clone().unwrap(),
                     false => format!("\"{}\"", self.value.clone().unwrap()),
                 };

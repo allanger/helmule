@@ -1,6 +1,5 @@
-use std::process::{Command, ExitStatus};
-
 use log::info;
+use std::process::Command;
 
 pub(crate) fn cli_exec(command: String) -> Result<String, Box<dyn std::error::Error>> {
     info!("executing: {}", command);
@@ -37,9 +36,11 @@ pub(crate) fn cli_exec_from_dir(
     stdout.pop();
     Ok(stdout)
 }
+
 #[cfg(test)]
 mod tests {
     use crate::helpers::cli::{cli_exec, cli_exec_from_dir};
+    use tempfile::TempDir;
 
     #[test]
     fn test_stderr() {
@@ -57,10 +58,19 @@ mod tests {
 
     #[test]
     fn test_stdout_current_dir() {
-        let dir = tempfile::tempdir().unwrap();
+        let dir = TempDir::new().unwrap();
+        let dir_str = dir.path().to_str().unwrap().to_string();
         let command = "echo $PWD";
-        let dir_str = dir.into_path().into_os_string().into_string().unwrap();
         let test = cli_exec_from_dir(command.to_string(), dir_str.clone());
         assert!(test.unwrap().to_string().contains(dir_str.as_str()));
+    }
+
+    #[test]
+    fn test_stderr_current_dir() {
+        let dir = TempDir::new().unwrap();
+        let dir_str = dir.path().to_str().unwrap().to_string();
+        let command = ">&2 echo \"error\" && exit 1";
+        let test = cli_exec_from_dir(command.to_string(), dir_str.clone());
+        assert_eq!(test.err().unwrap().to_string(), "error\n".to_string());
     }
 }

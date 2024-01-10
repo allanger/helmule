@@ -12,7 +12,7 @@ pub(crate) struct ChartLocal {
     pub(crate) version: String,
     pub(crate) path: String,
     pub(crate) repo_url: String,
-    pub(crate) vars: HashMap<String, String>
+    pub(crate) vars: HashMap<String, String>,
 }
 
 impl ChartLocal {
@@ -22,7 +22,11 @@ impl ChartLocal {
 }
 
 pub(crate) trait Repo {
-    fn pull(&self, workdir_path: String, vars: HashMap<String, String>) -> Result<ChartLocal, Box<dyn std::error::Error>>;
+    fn pull(
+        &self,
+        workdir_path: String,
+        vars: HashMap<String, String>,
+    ) -> Result<ChartLocal, Box<dyn std::error::Error>>;
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

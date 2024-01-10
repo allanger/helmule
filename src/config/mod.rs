@@ -1,6 +1,6 @@
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
-use std::{fs::File, collections::HashMap};
+use std::{collections::HashMap, fs::File};
 
 pub(crate) mod extension;
 pub(crate) mod patch;
@@ -98,7 +98,7 @@ impl Chart {
                 Some(mut vars) => {
                     vars.extend(global_vars);
                     Some(vars)
-                },
+                }
                 None => Some(global_vars),
             }
         };

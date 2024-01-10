@@ -1,4 +1,4 @@
-use crate::{helpers::cli::cli_exec_from_dir, source::ChartLocal};
+use crate::{helpers::cli::cli_exec_from_dir, source::ChartLocal, template};
 use dircpy::*;
 
 use super::Target;
@@ -18,7 +18,7 @@ impl Target for Git {
         chart_local: ChartLocal,
         dry_run: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let mut reg = super::register_handlebars();
+        let mut reg = template::register_handlebars();
         // Prepare the URL
         reg.register_template_string("url", self.url.clone())?;
         let url = reg.render("url", &chart_local)?;

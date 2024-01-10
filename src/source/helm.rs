@@ -1,7 +1,7 @@
 use super::{ChartLocal, Repo};
 use crate::helpers::cli::{cli_exec, cli_exec_from_dir};
 use base64::{engine::general_purpose, Engine as _};
-use std::{fs::rename, collections::HashMap};
+use std::{collections::HashMap, fs::rename};
 
 pub(crate) enum RepoKind {
     Default,
@@ -46,7 +46,11 @@ impl Helm {
         }
     }
 
-    fn pull_default(&self, workdir_path: String, vars: HashMap<String, String>) -> Result<ChartLocal, Box<dyn std::error::Error>> {
+    fn pull_default(
+        &self,
+        workdir_path: String,
+        vars: HashMap<String, String>,
+    ) -> Result<ChartLocal, Box<dyn std::error::Error>> {
         // Add repo and update
         let repo_local_name = general_purpose::STANDARD_NO_PAD.encode(self.repository_url.clone());
         let cmd = format!("helm repo add {} {}", repo_local_name, self.repository_url);
@@ -93,7 +97,11 @@ impl Helm {
 }
 
 impl Repo for Helm {
-    fn pull(&self, workdir_path: String, vars: HashMap<String, String>) -> Result<ChartLocal, Box<dyn std::error::Error>> {
+    fn pull(
+        &self,
+        workdir_path: String,
+        vars: HashMap<String, String>,
+    ) -> Result<ChartLocal, Box<dyn std::error::Error>> {
         let repository_kind = self.repo_kind_from_url()?;
         let path = match repository_kind {
             RepoKind::Default => self.pull_default(workdir_path, vars)?,

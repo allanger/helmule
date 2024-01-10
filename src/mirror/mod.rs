@@ -1,7 +1,3 @@
-use chrono::prelude::*;
-use handlebars::{handlebars_helper, Handlebars};
-use time::{format_description::parse, OffsetDateTime};
-
 use crate::{config::Mirror, source::ChartLocal};
 
 pub(crate) mod custom_command;
@@ -43,14 +39,4 @@ pub(crate) fn mirror_from_mirror_obj(
         "a kind is unknown for the mirror {}",
         mirror.name
     )))
-}
-
-handlebars_helper!(date_helper: | | Utc::now().format("%Y-%m-%d").to_string());
-handlebars_helper!(time_helper: | | Utc::now().format("%H-%M-%S").to_string());
-
-pub(crate) fn register_handlebars() -> Handlebars<'static> {
-    let mut handlebars = Handlebars::new();
-    handlebars.register_helper("date", Box::new(date_helper));
-    handlebars.register_helper("time", Box::new(time_helper));
-    handlebars
 }
