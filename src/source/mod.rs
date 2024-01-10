@@ -36,18 +36,16 @@ pub(crate) struct Version {
 
 pub(crate) fn repo_from_chart(chart: Chart) -> Result<Box<dyn Repo>, Box<dyn std::error::Error>> {
     match chart.get_repo_kind() {
-        Ok(res) => {
-            match res {
-                crate::config::RepositoryKind::Helm => {
-                    let helm: helm::Helm = chart.into();
-                    Ok(Box::new(helm))
-                }
-                crate::config::RepositoryKind::Git => {
-                    let git: git::Git = chart.into();
-                    Ok(Box::new(git))
-                }
+        Ok(res) => match res {
+            crate::config::RepositoryKind::Helm => {
+                let helm: helm::Helm = chart.into();
+                Ok(Box::new(helm))
             }
-        }
+            crate::config::RepositoryKind::Git => {
+                let git: git::Git = chart.into();
+                Ok(Box::new(git))
+            }
+        },
         Err(err) => Err(err),
     }
 }

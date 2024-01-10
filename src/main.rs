@@ -8,7 +8,7 @@ pub(crate) mod template;
 use clap::Parser;
 use log::{error, info};
 use std::collections::HashMap;
-use std::fs;
+use std::{env, fs};
 use std::{fs::create_dir, path::PathBuf, process::exit};
 use tempfile::TempDir;
 
@@ -27,6 +27,8 @@ struct Args {
     /// Dry run
     #[arg(short, long, default_value = "false")]
     dry_run: bool,
+    #[arg(long, default_value = "false")]
+    skip_prerequisites_check: bool,
     /// Init git patch. Use it if you want to create git patch for a chart
     /// It's going to pull a chart and init a git repo there, so you can
     /// apply changes and create a patch file
@@ -36,9 +38,30 @@ struct Args {
     init_git_patch: Option<Vec<String>>,
 }
 
+fn check_prerequisites() -> Result<(), Box<dyn std::error::Error>> {
+    info!("checking prerequisites");
+    let prerequisites = vec!["helm", "yq", "helm"];
+    for bin in prerequisites {
+        info!("checking {}", bin);
+        which::which(bin)?;
+    }
+    Ok(())
+}
+
 fn main() {
+    // Prepare the logger
+    if env::var("RUST_LOG").is_err() {
+        env::set_var("RUST_LOG", "info")
+    }
     env_logger::init();
+
     let args = Args::parse();
+    if !args.skip_prerequisites_check {
+        if let Err(err) = check_prerequisites() {
+            error!("{}", err);
+            exit(1);
+        }
+    }
     // Prepare the workdir
     let workdir_path = match args.workdir {
         Some(res) => match create_dir(res.clone()) {

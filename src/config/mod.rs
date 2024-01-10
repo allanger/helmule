@@ -189,11 +189,9 @@ impl Chart {
                     return Err(Box::from("unknown repository kind is found"));
                 }
             }
-            None => {
-                Err(Box::from(
-                    "repository object is not filled up for the chart",
-                ))
-            }
+            None => Err(Box::from(
+                "repository object is not filled up for the chart",
+            )),
         }
     }
 }
