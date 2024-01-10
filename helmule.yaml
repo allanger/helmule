@@ -1,0 +1,97 @@
+# mirror charts
+repositories:
+  - name: metrics-server
+    helm:
+      url: https://kubernetes-sigs.github.io/metrics-server/
+  - name: db-operator
+    git:
+      url: https://github.com/db-operator/charts.git
+      ref: main
+      path: charts
+  - name: badhouseplants
+    helm:
+      url: https://badhouseplants.github.io/helm-charts/
+  - name: flux-community
+    helm:
+      url: https://fluxcd-community.github.io/helm-charts
+charts:
+  - name: vaultwarden
+    repository: badhouseplants
+    version: latest
+    extensions:
+      - name: Add virtual service to the chartc
+        target_dir: templates/extensions
+        source_dir: ./examples/extensions/vaultwarden
+    patches:
+      - name: Git patch 1
+        git:
+          path: ./examples/patches/git/patch.diff
+      - name: Git patch 2
+        git:
+          path: ./examples/patches/git/patch-2.diff
+      - name: yaml-fmt
+        custom_command:
+          commands:
+            - |-
+              cat <<EOT >> .yamlfmt
+                formatter:
+                  pad_line_comments: 2
+              EOT
+            - yamlfmt values.yaml --conf ./yamlfmt.yaml
+            - rm -f yamlfmt.yaml
+    mirrors:
+      - badhouseplants-git
+      - custom-command
+  - name: flux2
+    repository: flux-community
+    extensions:
+      - name: Create a job that will apply crds
+        target_dir: templates/crd-install
+        source_dir: ./examples/extensions/flux2
+    patches:
+      - name: Add crds to chart files
+        custom_command:
+          commands:
+            - mkdir crd-base
+            - |-
+              cd crd-base && helm template flux . \
+                | yq '. | select(.kind == "CustomResourceDefinition")' \
+                | yq -s '.kind + "-" + .metadata.name'
+      - name: Remove CRDs from the templates
+        custom_command:
+          commands:
+            - find . -name "*crds*" -type f -delete
+      - name: Remove installCRDs value from the default values
+        regexp:
+          path: ./examples/patches/flux-regexp
+      - name: yaml-fmt
+        custom_command:
+          commands:
+            - |-
+              cat <<EOT >> .yamlfmt
+                formatter:
+                  pad_line_comments: 2
+              EOT
+            - yamlfmt values.yaml --conf ./yamlfmt.yaml
+            - rm -f yamlfmt.yaml
+    mirrors:
+      - custom-command
+mirrors:
+  - name: badhouseplants-git
+    git:
+      url: git@git.badhouseplants.net:allanger/helmuled-charts.git
+      branch: upgrade-{{ name }}-to-{{ version }}
+      path: charts/{{ name }}
+      commit: |-
+        chore: mirror {{ name }}-{{ version }}
+
+        upstream_repo: {{ repo_url }}
+  - name: custom-command
+    custom_command:
+      package:
+        - zip -r {{ name }}-{{ version }}.zip {{ name }}-{{ version }}
+      upload:
+        - rm -f /tmp/{{ name }}-{{ version }}.zip
+        - rm -rf /tmp/{{ name }}-{{ version }}
+        - cp {{ name }}-{{ version }}.zip /tmp
+        - unzip /tmp/{{ name }}-{{ version }}.zip -d /tmp/{{ name }}-{{ version}}

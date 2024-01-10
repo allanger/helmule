@@ -1,0 +1,30 @@
+{{- if .Values.virtualservice.enabled -}}
+{{- $fullName := include "vaultwarden.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+{{- if $.Capabilities.APIVersions.Has "networking.istio.io/v1beta1" }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "vaultwarden.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gateways:
+    - {{ .Values.virtaulservice.gatewayRef }}
+  hosts:
+    - ci.badhouseplants.ne
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: woodpecker-ci-server
+            port:
+              number: 80
+{{- end }}
+{{- end }}

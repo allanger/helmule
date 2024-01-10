@@ -1,0 +1,13 @@
+diff --git a/Chart.yaml b/Chart.yaml
+index d8995d5..0e5f5a5 100644
+--- a/Chart.yaml
++++ b/Chart.yaml
+@@ -8,7 +8,7 @@ keywords:
+ - bitwarden
+ - bitwarden_rs
+ maintainers:
+-- email: allanger@badhouseplants.net
++- email: Somebody else
+   name: Nikolai Rodionov
+   url: https://badhouseplants.net
+ name: vaultwarden

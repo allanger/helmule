@@ -1,0 +1,51 @@
+---
+name: Remove CRDs leftovers from values
+targets:
+  - values.yaml
+before: |-
+  installCRDs: true
+  crds:
+    # -- Add annotations to all CRD resources, e.g. "helm.sh/resource-policy": keep
+    annotations: \{\}
+after: |-
+  crds:
+    install: true
+
+    # Add seccomp to pod security context
+    podSeccompProfile:
+      type: RuntimeDefault
+
+    # Add seccomp to container security context
+    seccompProfile:
+      type: RuntimeDefault
+
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "250m"
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+
+---
+name: Append crd install data to helpers
+targets:
+  - templates/_helper.tpl
+after: |-
+  {{- define "crdInstall" -}}
+  {{- printf "%s-%s" ( include "name" . ) "crd-install" | replace "+" "_" | trimSuffix "-" -}}
+  {{- end -}}
+
+  {{- define "crdInstallJob" -}}
+  {{- printf "%s-%s-%s" ( include "name" . ) "crd-install" .Chart.AppVersion | replace "+" "_" | replace "." "-" | trimSuffix "-" | trunc 63 -}}
+  {{- end -}}
+
+  {{- define "crdInstallAnnotations" -}}
+  "helm.sh/hook": "pre-install,pre-upgrade"
+  "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded,hook-failed"
+  {{- end -}}
+
+  {{/* Create a label which can be used to select any orphaned crd-install hook resources */}}
+  {{- define "crdInstallSelector" -}}
+  {{- printf "%s" "crd-install-hook" -}}
+  {{- end -}}

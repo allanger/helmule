@@ -1,0 +1,7 @@
+---
+name: Add spaces before comments
+targets:
+  - values.yaml
+before: |-
+  ^.*[\S]+.*#
+after: " #"
