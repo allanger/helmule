@@ -1,12 +1,13 @@
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use std::{fs::File, collections::HashMap};
 
 pub(crate) mod extension;
 pub(crate) mod patch;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub(crate) struct Config {
+    pub(crate) variables: Option<HashMap<String, String>>,
     pub(crate) repositories: Vec<Repository>,
     pub(crate) charts: Vec<Chart>,
     pub(crate) mirrors: Vec<Mirror>,
@@ -54,6 +55,7 @@ pub(crate) struct GitMirror {
     pub(crate) path: Option<String>,
     pub(crate) branch: String,
     pub(crate) commit: Option<String>,
+    pub(crate) git_dir: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -82,6 +84,7 @@ pub(crate) struct Chart {
     // A repository object
     pub(crate) extensions: Option<Vec<extension::Extension>>,
     pub(crate) patches: Option<Vec<patch::Patch>>,
+    pub(crate) variables: Option<HashMap<String, String>>,
     #[serde(skip_serializing)]
     pub(crate) repository_obj: Option<Repository>,
     #[serde(skip_serializing)]
@@ -89,6 +92,18 @@ pub(crate) struct Chart {
 }
 
 impl Chart {
+    pub(crate) fn populate_variables(&mut self, global_variables: Option<HashMap<String, String>>) {
+        if let Some(global_vars) = global_variables {
+            self.variables = match self.variables.clone() {
+                Some(mut vars) => {
+                    vars.extend(global_vars);
+                    Some(vars)
+                },
+                None => Some(global_vars),
+            }
+        };
+    }
+
     pub(crate) fn populate_repository(
         &mut self,
         repositories: Vec<Repository>,

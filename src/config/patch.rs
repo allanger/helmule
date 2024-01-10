@@ -61,19 +61,22 @@ trait PatchInterface {
 impl PatchInterface for YqPatch {
     fn apply(&self, chart_local_path: String) -> Result<(), Box<dyn std::error::Error>> {
         let cmd = match self.op {
-            YqOperations::Add => format!(
-                "yq -i '{} += \"{}\"' {}",
-                self.key,
-                self.value.clone().unwrap(),
-                self.file
-            ),
+            YqOperations::Add => {
+                let value = match self.value.clone().unwrap().starts_with(['{', '[', '\"', '\'']) {
+                    true => self.value.clone().unwrap(),
+                    false => format!("\"{}\"", self.value.clone().unwrap()),
+                };
+                format!("yq -i '{} += {}' {}", self.key, value, self.file)
+            }
             YqOperations::Delete => format!("yq -i \'del({})\' {}", self.key, self.file),
-            YqOperations::Replace => format!(
-                "yq e -i \'{} = \"{}\"\' {}",
-                self.key,
-                self.value.clone().unwrap(),
-                self.file
-            ),
+            YqOperations::Replace => {
+                let value = match self.value.clone().unwrap().starts_with(['{', '[']) {
+                    true => self.value.clone().unwrap(),
+                    false => format!("\"{}\"", self.value.clone().unwrap()),
+                };
+
+                format!("yq e -i '{} = {}' {}", self.key, value, self.file)
+            }
         };
         cli_exec_from_dir(cmd, chart_local_path)?;
         Ok(())

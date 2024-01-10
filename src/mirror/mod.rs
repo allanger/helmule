@@ -21,7 +21,10 @@ pub(crate) fn mirror_from_mirror_obj(
 ) -> Result<Box<dyn Target>, Box<dyn std::error::Error>> {
     if let Some(git) = mirror.git {
         return Ok(Box::from(git::Git {
-            git_dir: mirror.name.clone(),
+            git_dir: match git.git_dir {
+                Some(dir) => dir,
+                None => mirror.name,
+            },
             url: git.url,
             path: match git.path {
                 Some(path) => path,

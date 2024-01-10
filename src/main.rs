@@ -6,6 +6,7 @@ pub(crate) mod source;
 
 use clap::Parser;
 use log::{error, info};
+use std::collections::HashMap;
 use std::fs;
 use std::{fs::create_dir, path::PathBuf, process::exit};
 use tempfile::TempDir;
@@ -77,6 +78,7 @@ fn main() {
     };
 
     for mut chart in config.clone().charts {
+        chart.populate_variables(config.variables.clone());
         match chart.populate_repository(config.repositories.clone()) {
             Ok(_) => {
                 info!("repo is populated for chart {}", chart.name);
@@ -102,7 +104,11 @@ fn main() {
                 exit(1);
             }
         };
-        match chart_repo.pull(workdir_path.clone()) {
+        let vars = match chart.variables {
+            Some(vars) => vars,
+            None => HashMap::new(),
+        };
+        match chart_repo.pull(workdir_path.clone(), vars) {
             Ok(res) => {
                 info!(
                     "succesfully pulled chart {} into {}",

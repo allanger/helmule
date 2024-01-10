@@ -18,12 +18,19 @@ impl Target for Git {
         chart_local: ChartLocal,
         dry_run: bool,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        let cmd = format!("git clone {} {}", self.url, self.git_dir);
+        let mut reg = super::register_handlebars();
+        // Prepare the URL
+        reg.register_template_string("url", self.url.clone())?;
+        let url = reg.render("url", &chart_local)?;
+        //Prepare the git dir
+        reg.register_template_string("git_dir", self.git_dir.clone())?;
+        let git_dir = reg.render("git_dir", &chart_local)?;
+
+        let cmd = format!("git clone {} {}", url, git_dir);
         cli_exec_from_dir(cmd, workdir_path.clone())?;
-        let git_repo_path = format!("{}/{}", workdir_path, self.git_dir);
+        let git_repo_path = format!("{}/{}", workdir_path, git_dir);
 
         // Prepare branch
-        let mut reg = super::register_handlebars();
         reg.register_template_string("branch", self.branch.clone())?;
         let branch = reg.render("branch", &chart_local)?;
         let cmd = format!("git checkout {}", branch);
