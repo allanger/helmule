@@ -116,7 +116,7 @@ impl Chart {
         }
         //let err = error!("repo {} is not found in the repo list", self.repository);
         let error_msg = format!("repo {} is not found in the repo list", self.repository);
-        return Err(Box::from(error_msg));
+        Err(Box::from(error_msg))
     }
     // TODO: Handle the "mirror not found" error
     pub(crate) fn populate_mirrors(
@@ -132,7 +132,7 @@ impl Chart {
                 }
             }
         }
-        if mirror_objs.len() > 0 {
+        if !mirror_objs.is_empty() {
             self.mirror_objs = Some(mirror_objs);
         }
         Ok(())
@@ -143,7 +143,7 @@ impl Chart {
             Some(res) => res.helm.unwrap().url,
             None => {
                 warn!("repository object is not filled for chart {}", self.name);
-                return "".to_string();
+                "".to_string()
             }
         }
     }
@@ -153,7 +153,7 @@ impl Chart {
             Some(res) => res.git.unwrap().url,
             None => {
                 warn!("repository object is not filled for chart {}", self.name);
-                return "".to_string();
+                "".to_string()
             }
         }
     }
@@ -163,7 +163,7 @@ impl Chart {
             Some(res) => res.git.unwrap().git_ref,
             None => {
                 warn!("repository object is not filled for chart {}", self.name);
-                return "".to_string();
+                "".to_string()
             }
         }
     }
@@ -173,7 +173,7 @@ impl Chart {
             Some(res) => res.git.unwrap().path,
             None => {
                 warn!("repository object is not filled for chart {}", self.name);
-                return "".to_string();
+                "".to_string()
             }
         }
     }
@@ -182,7 +182,7 @@ impl Chart {
         match &self.repository_obj {
             Some(res) => {
                 if res.helm.is_some() {
-                    return Ok(RepositoryKind::Helm);
+                    Ok(RepositoryKind::Helm)
                 } else if res.git.is_some() {
                     return Ok(RepositoryKind::Git);
                 } else {
@@ -190,9 +190,9 @@ impl Chart {
                 }
             }
             None => {
-                return Err(Box::from(
+                Err(Box::from(
                     "repository object is not filled up for the chart",
-                ));
+                ))
             }
         }
     }

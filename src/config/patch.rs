@@ -172,12 +172,12 @@ fn patch_action_from_definition(
     patch: Patch,
 ) -> Result<Box<dyn PatchInterface>, Box<dyn std::error::Error>> {
     if let Some(regexp) = patch.regexp {
-        return Ok(Box::new(RegexpPatch { path: regexp.path }));
+        Ok(Box::new(RegexpPatch { path: regexp.path }))
     } else if let Some(git) = patch.git {
         return Ok(Box::new(GitPatch {
             path: {
                 let path = PathBuf::from(git.path);
-                let can_path = fs::canonicalize(&path).ok().unwrap();
+                let can_path = fs::canonicalize(path).ok().unwrap();
                 can_path.into_os_string().into_string().ok().unwrap()
             },
         }));
@@ -192,7 +192,7 @@ fn patch_action_from_definition(
         return Ok(Box::from(yq));
     } else {
         return Err(Box::from("unknown patch type"));
-    };
+    }
 }
 
 fn is_git_repo(path: String) -> bool {

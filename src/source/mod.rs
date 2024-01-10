@@ -37,7 +37,7 @@ pub(crate) struct Version {
 pub(crate) fn repo_from_chart(chart: Chart) -> Result<Box<dyn Repo>, Box<dyn std::error::Error>> {
     match chart.get_repo_kind() {
         Ok(res) => {
-            return match res {
+            match res {
                 crate::config::RepositoryKind::Helm => {
                     let helm: helm::Helm = chart.into();
                     Ok(Box::new(helm))
@@ -48,6 +48,6 @@ pub(crate) fn repo_from_chart(chart: Chart) -> Result<Box<dyn Repo>, Box<dyn std
                 }
             }
         }
-        Err(err) => return Err(Box::from(err)),
-    };
+        Err(err) => Err(err),
+    }
 }

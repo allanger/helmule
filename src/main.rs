@@ -44,7 +44,7 @@ fn main() {
         Some(res) => match create_dir(res.clone()) {
             Ok(_) => {
                 let path = PathBuf::from(res);
-                let can_path = fs::canonicalize(&path).ok().unwrap();
+                let can_path = fs::canonicalize(path).ok().unwrap();
                 can_path.into_os_string().into_string().ok().unwrap()
             }
             Err(err) => {
