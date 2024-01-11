@@ -8,7 +8,7 @@ pub(crate) mod include;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub(crate) struct Config {
-    pub(crate) include: Option<HashMap::<include::IncludeTypes, String>>,
+    pub(crate) include: Option<Vec<include::Include>>,
     pub(crate) variables: Option<HashMap<String, String>>,
     pub(crate) repositories: Option<Vec<Repository>>,
     pub(crate) charts: Option<Vec<Chart>>,

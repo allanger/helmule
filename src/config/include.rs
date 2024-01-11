@@ -8,11 +8,17 @@ pub(crate) enum IncludeTypes {
     Repositories,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub(crate) struct Include {
+    kind: IncludeTypes,
+    path: String,
+}
+
 pub(crate) fn apply_includes(config: &mut super::Config) -> Result<(), Box<dyn std::error::Error>> {
-    for (kind, path) in config.include.clone().unwrap() {
-        match kind {
+    for include in config.include.clone().unwrap() {
+        match include.kind {
             IncludeTypes::Charts => {
-                let mut charts = include_chart(path)?;
+                let mut charts = include_chart(include.path)?;
                 let extended_charts = match config.charts.clone() {
                     Some(mut existing_charts) => {
                         existing_charts.append(&mut charts);
@@ -23,7 +29,7 @@ pub(crate) fn apply_includes(config: &mut super::Config) -> Result<(), Box<dyn s
                 config.charts = Some(extended_charts); 
             },
             IncludeTypes::Mirrors => {
-                let mut mirrors = include_mirrors(path)?;
+                let mut mirrors = include_mirrors(include.path)?;
                 let extended_mirrors = match config.mirrors.clone() {
                     Some(mut existing_mirrors) => {
                         existing_mirrors.append(&mut mirrors);
@@ -34,7 +40,7 @@ pub(crate) fn apply_includes(config: &mut super::Config) -> Result<(), Box<dyn s
                 config.mirrors = Some(extended_mirrors);
             },
             IncludeTypes::Repositories => {
-                let mut repositories = include_repositories(path)?;
+                let mut repositories = include_repositories(include.path)?;
                 let extended_repositories = match config.repositories.clone() {
                     Some(mut existing_repositories) => {
                         existing_repositories.append(&mut repositories);

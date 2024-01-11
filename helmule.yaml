@@ -1,6 +1,7 @@
 # mirror charts
 include:
-  Charts: ./examples/use/charts/vaultwarden.yaml
+  - kind: Charts
+    path: ./examples/use/charts/vaultwardens.yaml
 repositories:
   - name: metrics-server
     helm:
