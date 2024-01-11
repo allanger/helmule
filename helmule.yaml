@@ -1,4 +1,6 @@
 # mirror charts
+include:
+  Charts: ./examples/use/charts/vaultwarden.yaml
 repositories:
   - name: metrics-server
     helm:
@@ -15,33 +17,6 @@ repositories:
     helm:
       url: https://fluxcd-community.github.io/helm-charts
 charts:
-  - name: vaultwarden
-    repository: badhouseplants
-    version: latest
-    extensions:
-      - name: Add virtual service to the chartc
-        target_dir: templates/extensions
-        source_dir: ./examples/extensions/vaultwarden
-    patches:
-      - name: Git patch 1
-        git:
-          path: ./examples/patches/git/patch.diff
-      - name: Git patch 2
-        git:
-          path: ./examples/patches/git/patch-2.diff
-      - name: yaml-fmt
-        custom_command:
-          commands:
-            - |-
-              cat <<EOT >> .yamlfmt
-                formatter:
-                  pad_line_comments: 2
-              EOT
-            - yamlfmt values.yaml --conf ./yamlfmt.yaml
-            - rm -f yamlfmt.yaml
-    mirrors:
-      - badhouseplants-git
-      - custom-command
   - name: flux2
     repository: flux-community
     extensions:

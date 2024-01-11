@@ -4,20 +4,25 @@ use std::{collections::HashMap, fs::File};
 
 pub(crate) mod extension;
 pub(crate) mod patch;
+pub(crate) mod include;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub(crate) struct Config {
+    pub(crate) include: Option<HashMap::<include::IncludeTypes, String>>,
     pub(crate) variables: Option<HashMap<String, String>>,
-    pub(crate) repositories: Vec<Repository>,
-    pub(crate) charts: Vec<Chart>,
-    pub(crate) mirrors: Vec<Mirror>,
+    pub(crate) repositories: Option<Vec<Repository>>,
+    pub(crate) charts: Option<Vec<Chart>>,
+    pub(crate) mirrors: Option<Vec<Mirror>>,
 }
 
 impl Config {
     pub(crate) fn new(config_path: String) -> Result<Self, Box<dyn std::error::Error>> {
         info!("reading the config file");
         let config_content = File::open(config_path)?;
-        let config: Config = serde_yaml::from_reader(config_content)?;
+        let mut config: Config = serde_yaml::from_reader(config_content)?;
+        if config.include.is_some() {
+            include::apply_includes(&mut config)?;
+        }
         Ok(config)
     }
 }
