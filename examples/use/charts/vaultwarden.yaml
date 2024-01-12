@@ -4,14 +4,14 @@ version: latest
 extensions:
   - name: Add virtual service to the chartc
     target_dir: templates/extensions
-    source_dir: ./examples/extensions/vaultwarden
+    source_dir: ../../extensions/vaultwarden
 patches:
   - name: Git patch 1
     git:
-      path: ./examples/patches/git/patch.diff
+      path: ../../patches/git/patch.diff
   - name: Git patch 2
     git:
-      path: ./examples/patches/git/patch-2.diff
+      path: ../../patches/git/patch-2.diff
   - name: yaml-fmt
     custom_command:
       commands:

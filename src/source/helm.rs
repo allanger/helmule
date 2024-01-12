@@ -46,6 +46,53 @@ impl Helm {
         }
     }
 
+    fn pull_oci(
+        &self,
+        workdir_path: String,
+        vars: HashMap<String, String>,
+    ) -> Result<ChartLocal, Box<dyn std::error::Error>> {
+        let args = match self.version.as_str() {
+            LATEST_VERSION => "".to_string(),
+            _ => format!("--version {}", self.version.clone()),
+        };
+        let repo = match self.repository_url.ends_with("/"){
+            true => {
+                let mut repo = self.repository_url.clone();
+                repo.pop();
+                repo
+            },
+            false => self.repository_url.clone(),
+        };
+        let cmd = format!(
+            "helm pull {}/{} {} --destination {} --untar",
+            repo, &self.chart, args, workdir_path
+        );
+        cli_exec(cmd)?;
+        // Get the version
+        let cmd = format!("helm show chart {}/{}", workdir_path, &self.chart);
+        let helm_stdout = cli_exec(cmd)?;
+        let old_dir_name = format!("{}/{}", workdir_path, &self.chart);
+        let new_dir_name: String;
+        match serde_yaml::from_str::<super::Version>(&helm_stdout) {
+            Ok(res) => {
+                new_dir_name = format!("{}-{}", old_dir_name, res.version);
+                rename(old_dir_name, new_dir_name.clone())?;
+            }
+            Err(err) => return Err(Box::from(err)),
+        };
+
+
+        let cmd = "helm show chart . | yq '.version'".to_string();
+        let version = cli_exec_from_dir(cmd, new_dir_name.clone())?;
+        Ok(ChartLocal {
+            name: self.chart.clone(),
+            version,
+            path: new_dir_name,
+            repo_url: self.repository_url.clone(),
+            vars,
+        })
+    }
+
     fn pull_default(
         &self,
         workdir_path: String,
@@ -105,9 +152,7 @@ impl Repo for Helm {
         let repository_kind = self.repo_kind_from_url()?;
         let path = match repository_kind {
             RepoKind::Default => self.pull_default(workdir_path, vars)?,
-            RepoKind::Oci => {
-                todo!()
-            }
+            RepoKind::Oci => self.pull_oci(workdir_path, vars)?,
         };
         Ok(path)
     }

@@ -3,6 +3,9 @@ include:
   - kind: Charts
     path: ./examples/use/charts/vaultwardens.yaml
 repositories:
+  - name: bitnami-oci
+    helm:
+      url: oci://registry-1.docker.io/bitnamicharts/
   - name: metrics-server
     helm:
       url: https://kubernetes-sigs.github.io/metrics-server/
@@ -18,6 +21,11 @@ repositories:
     helm:
       url: https://fluxcd-community.github.io/helm-charts
 charts:
+  - name: postgresql
+    repository: bitnami-oci
+    version: 13.2.29
+    mirrors:
+      - badhouseplants-git
   - name: flux2
     repository: flux-community
     extensions:

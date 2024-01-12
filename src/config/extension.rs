@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub(crate) struct Extension {
     name: Option<String>,
     target_dir: String,
-    source_dir: String,
+    pub(crate) source_dir: String,
 }
 
 impl Extension {

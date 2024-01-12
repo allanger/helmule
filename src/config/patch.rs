@@ -52,10 +52,25 @@ impl Patch {
         let patch_action = patch_action_from_definition(self.clone())?;
         patch_action.apply(chart_local_path)
     }
+    pub(crate) fn get_path(&self) -> String {
+        let patch_action = patch_action_from_definition(self.clone()).unwrap();
+        patch_action.get_path()
+    }
+    pub(crate) fn set_path(&mut self, path: String) {
+        if let Some(ref mut regexp) = self.regexp {
+            regexp.path = path;
+        } else if let Some(ref mut git) = self.git {
+            git.path = path;
+        } else if let Some(ref mut yq) = self.yq {
+            yq.file = path
+        } 
+    }
 }
 
 trait PatchInterface {
     fn apply(&self, chart_local_path: String) -> Result<(), Box<dyn std::error::Error>>;
+    fn get_path(&self) -> String;
+    fn set_path(&mut self, new_path: String);
 }
 
 impl PatchInterface for YqPatch {
@@ -85,6 +100,14 @@ impl PatchInterface for YqPatch {
         };
         cli_exec_from_dir(cmd, chart_local_path)?;
         Ok(())
+    }
+
+    fn get_path(&self) -> String {
+        self.file.clone()
+    }
+
+    fn set_path(&mut self, new_path: String) {
+        self.file = new_path
     }
 }
 
@@ -145,6 +168,14 @@ impl PatchInterface for RegexpPatch {
         }
         Ok(())
     }
+
+    fn get_path(&self) -> String {
+        self.path.clone()
+    }
+
+    fn set_path(&mut self, new_path: String) {
+        self.path = new_path
+    }
 }
 
 impl PatchInterface for GitPatch {
@@ -157,6 +188,14 @@ impl PatchInterface for GitPatch {
         remove_dir_all(chart_local_path + "/.git")?;
         Ok(())
     }
+
+    fn get_path(&self) -> String {
+        self.path.clone()
+    }
+
+    fn set_path(&mut self, new_path: String) {
+        self.path = new_path
+    }
 }
 
 impl PatchInterface for CustomCommandPatch {
@@ -165,6 +204,15 @@ impl PatchInterface for CustomCommandPatch {
             cli_exec_from_dir(cmd, chart_local_path.clone())?;
         }
         Ok(())
+    }
+
+    fn get_path(&self) -> String {
+        // Empty stings, cause cc patch doesn't have a path
+        "".to_string()
+    }
+
+    fn set_path(&mut self, _new_path: String) {
+        ()
     }
 }
 
@@ -176,9 +224,11 @@ fn patch_action_from_definition(
     } else if let Some(git) = patch.git {
         return Ok(Box::new(GitPatch {
             path: {
-                let path = PathBuf::from(git.path);
-                let can_path = fs::canonicalize(path).ok().unwrap();
-                can_path.into_os_string().into_string().ok().unwrap()
+                let path = PathBuf::from(git.path.clone());
+                match fs::canonicalize(path).ok(){
+                    Some(can_path) => can_path.into_os_string().into_string().ok().unwrap(),
+                    None => git.path.clone(), 
+                }
             },
         }));
     } else if let Some(custom_command) = patch.custom_command {
