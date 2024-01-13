@@ -1,5 +1,5 @@
 use super::Target;
-use crate::{helpers::cli::cli_exec_from_dir, template};
+use crate::{helpers::cli::cli_exec_from_dir, helpers::template};
 
 pub(crate) struct CustomCommands {
     pub(crate) package: Vec<String>,

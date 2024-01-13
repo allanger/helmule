@@ -3,7 +3,6 @@ pub(crate) mod helpers;
 pub(crate) mod mirror;
 pub(crate) mod patch;
 pub(crate) mod source;
-pub(crate) mod template;
 
 use clap::Parser;
 use log::{error, info};

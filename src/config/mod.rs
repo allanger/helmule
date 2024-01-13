@@ -61,6 +61,8 @@ pub(crate) struct GitMirror {
     pub(crate) branch: String,
     pub(crate) commit: Option<String>,
     pub(crate) git_dir: Option<String>,
+    pub(crate) rebase: Option<bool>,
+    pub(crate) default_branch: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

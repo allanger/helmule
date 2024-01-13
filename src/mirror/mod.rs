@@ -28,6 +28,11 @@ pub(crate) fn mirror_from_mirror_obj(
             },
             branch: git.branch,
             commit: git.commit,
+            default_branch: git.default_branch,
+            rebase: match git.rebase {
+                Some(r) => r,
+                None => false,
+            },
         }));
     } else if let Some(command) = mirror.custom_command {
         return Ok(Box::from(custom_command::CustomCommands {
