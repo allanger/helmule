@@ -160,7 +160,7 @@ fn main() {
                     }
                     if let Some(patches) = chart.patches.clone() {
                         for patch in patches {
-                            if let Err(err) = patch.apply(res.clone().path) {
+                            if let Err(err) = patch.apply(res.clone().path, config.patches.clone()) {
                                 error!("{}", err);
                                 exit(1);
                             }

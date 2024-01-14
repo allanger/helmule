@@ -1,7 +1,16 @@
+patches:
+  - name: yamlfmt
+    custom_command:
+      commands:
+        - |-
+          cat <<EOT >> .yamlfmt
+            formatter:
+              pad_line_comments: 2
+          EOT
+        - yamlfmt values.yaml --conf ./yamlfmt.yaml
+        - rm -f yamlfmt.yaml
+
 # mirror charts
-include:
-  - kind: Charts
-    path: ./examples/use/charts/vaultwardens.yaml
 repositories:
   - name: bitnami-oci
     helm:
@@ -21,11 +30,6 @@ repositories:
     helm:
       url: https://fluxcd-community.github.io/helm-charts
 charts:
-  - name: postgresql
-    repository: bitnami-oci
-    version: 13.2.29
-    mirrors:
-      - badhouseplants-git
   - name: flux2
     repository: flux-community
     extensions:
@@ -48,16 +52,7 @@ charts:
       - name: Remove installCRDs value from the default values
         regexp:
           path: ./examples/patches/flux-regexp
-      - name: yaml-fmt
-        custom_command:
-          commands:
-            - |-
-              cat <<EOT >> .yamlfmt
-                formatter:
-                  pad_line_comments: 2
-              EOT
-            - yamlfmt values.yaml --conf ./yamlfmt.yaml
-            - rm -f yamlfmt.yaml
+      - name: yamlfmt
     mirrors:
       - custom-command
 mirrors:

@@ -41,6 +41,7 @@ pub(crate) struct CustomCommandPatch {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub(crate) struct Patch {
+    name: Option<String>,
     regexp: Option<RegexpPatch>,
     git: Option<GitPatch>,
     custom_command: Option<CustomCommandPatch>,
@@ -48,8 +49,14 @@ pub(crate) struct Patch {
 }
 
 impl Patch {
-    pub(crate) fn apply(&self, chart_local_path: String) -> Result<(), Box<dyn std::error::Error>> {
-        let patch_action = patch_action_from_definition(self.clone())?;
+    pub(crate) fn apply(&self, chart_local_path: String, global_patches: Option<Vec<Patch>>) -> Result<(), Box<dyn std::error::Error>> {
+        let patch_action: Box<dyn PatchInterface>;
+        if self.is_ref(){
+            let patch_ref = self.get_ref(global_patches)?;
+            patch_action = Box::from(patch_action_from_definition(patch_ref)?);
+        } else {
+            patch_action = Box::from(patch_action_from_definition(self.clone())?);
+        }
         patch_action.apply(chart_local_path)
     }
     pub(crate) fn get_path(&self) -> String {
@@ -63,7 +70,45 @@ impl Patch {
             git.path = path;
         } else if let Some(ref mut yq) = self.yq {
             yq.file = path
-        } 
+        }
+    }
+
+    fn is_ref(&self) -> bool {
+        self.regexp.is_none()
+            && self.git.is_none()
+            && self.custom_command.is_none()
+            && self.yq.is_none()
+            && self.name.is_some()
+    }
+
+    pub(crate) fn get_ref(
+        &self,
+        global_patches: Option<Vec<Patch>>,
+    ) -> Result<Patch, Box<dyn std::error::Error>> {
+        match global_patches {
+            Some(patches) => {
+                let patch = patches
+                    .iter()
+                    .find(|&patch| patch.clone().name.unwrap() == self.clone().name.unwrap());
+                match patch {
+                    Some(patch) => {
+                        return Ok(patch.clone());
+                    }
+                    None => {
+                        return Err(Box::from(format!(
+                            "global patch is not found: {}",
+                            self.clone().name.unwrap()
+                        )))
+                    }
+                }
+            }
+            None => {
+                return Err(Box::from(format!(
+                    "patch {} is recognized as a reference, but global patches are not defined",
+                    self.clone().name.unwrap()
+                )))
+            }
+        }
     }
 }
 
@@ -225,9 +270,9 @@ fn patch_action_from_definition(
         return Ok(Box::new(GitPatch {
             path: {
                 let path = PathBuf::from(git.path.clone());
-                match fs::canonicalize(path).ok(){
+                match fs::canonicalize(path).ok() {
                     Some(can_path) => can_path.into_os_string().into_string().ok().unwrap(),
-                    None => git.path.clone(), 
+                    None => git.path.clone(),
                 }
             },
         }));
