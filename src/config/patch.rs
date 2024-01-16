@@ -60,16 +60,16 @@ impl Patch {
         patch_action.apply(chart_local_path)
     }
     pub(crate) fn get_path(&self) -> String {
-        let patch_action = patch_action_from_definition(self.clone()).unwrap();
-        patch_action.get_path()
+        match patch_action_from_definition(self.clone()) {
+            Ok(patch) => patch.get_path(),
+            Err(_) => "".to_string(),
+        }
     }
     pub(crate) fn set_path(&mut self, path: String) {
         if let Some(ref mut regexp) = self.regexp {
             regexp.path = path;
         } else if let Some(ref mut git) = self.git {
             git.path = path;
-        } else if let Some(ref mut yq) = self.yq {
-            yq.file = path
         }
     }
 
@@ -148,12 +148,11 @@ impl PatchInterface for YqPatch {
     }
 
     fn get_path(&self) -> String {
-        self.file.clone()
+        "".to_string()
     }
 
-    fn set_path(&mut self, new_path: String) {
-        self.file = new_path
-    }
+    fn set_path(&mut self, _new_path: String) {}
+
 }
 
 impl PatchInterface for RegexpPatch {
