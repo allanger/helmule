@@ -1,0 +1,59 @@
+variables:
+  global: example
+
+include:
+  - kind: Charts
+    path: ./charts/zot.yaml
+  - kind: Charts
+    path: ./charts/gitops-server.yaml
+  - kind: Charts
+    path: ./charts/external-secrets-operator.yaml
+patches:
+  - name: yamlfmt
+    custom_command:
+      commands:
+        - "cat <<EOT >> .yamlfmt\n  formatter:\n    pad_line_comments: 2\nEOT"
+        - yamlfmt values.yaml --conf ./yamlfmt.yaml
+        - rm -f yamlfmt.yaml
+  - name: team annotation
+    yq:
+      op: Add
+      key: .annotations."application.giantswarm.io/team"
+      value: team-honeybadger
+      file: Chart.yaml
+  - name: set home
+    yq:
+      op: Add
+      key: .home
+      value: https://github.com/giantswarm/flux-app
+      file: Chart.yaml
+  - name: set engine
+    yq:
+      op: Add
+      key: .engine
+      value: gtpl
+      file: Chart.yaml
+repositories:
+  # -- Because their helm repo seems not to be accessible
+  - name: zot-git
+    git:
+      url: https://github.com/project-zot/helm-charts.git
+      git_ref: main
+      # git_ref: zot-0.1.42
+      path: charts
+  - name: weave
+    helm:
+      url: https://helm.gitops.weave.works
+  - name: external-secrets
+    helm:
+      url: https://charts.external-secrets.io
+mirrors:
+  - name: apps-git
+    git:
+      url: git@git.badhouseplants.net:allanger/{{ vars.target_repo }}.git
+      git_dir: app-{{ name }}-git
+      branch: upgrade-{{ name }}-to-{{ version }}
+      path: helm/{{ name }}
+      commit: |-
+        chore: mirror {{ name }}-{{ version }}
+        upstream_repo: {{ repo_url }}

@@ -1,0 +1,24 @@
+# -------------------------------------------------------------------
+# -- Zot Application
+# -------------------------------------------------------------------
+name: zot
+repository: zot-git
+extensions:
+  - name: Add VPA
+    source_dir: ../extensions/vpa
+    target_dir: templates/gs-vpa
+  - name: Add values for CI
+    source_dir: ../extensions/ci-values
+    target_dir: ci
+variables:
+  target_repo: zot-app
+patches:
+  - name: team annotation
+  - name: set home
+  - name: set engine
+  - name: yamlfmt
+  - name: Git patch
+    git:
+      path: ../patches/git/zot.patch
+mirrors:
+  - apps-git

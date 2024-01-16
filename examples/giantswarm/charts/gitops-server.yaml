@@ -1,0 +1,61 @@
+# -------------------------------------------------------------------
+# -- GitOps Server Application
+# -------------------------------------------------------------------
+- name: weave-gitops
+  repository: weave
+  version: 4.0.15
+  variables:
+    target_repo: app-gitops-server
+  mirrors:
+    - apps-git
+  extensions:
+    - name: Add VPA
+      source_dir: ../extensions/vpa-gitops-server
+      target_dir: templates/gs-vpa
+  patches:
+    - name: Git patch
+      git:
+        path: ../patches/git/gitops-server.patch
+    - name: Generate values.schema
+      custom_command:
+        commands:
+          - helm schema-gen values.yaml > values.schema.json
+    - name: Git patch for values schema
+      git:
+        path: ../patches/git/gitops-server-values-schema.patch
+    - name: Git patch for test-job security
+      git:
+        path: ../patches/git/gitops-server-test-job.patch
+    # -- Update Chart.ymal
+    #- name: Change the chart name
+    #  yq:
+    #    op: Replace
+    #    file: Chart.yaml
+    #    key: .name
+    #    value: gitops-server
+    - name: Set the home URL
+      yq:
+        op: Add
+        file: Chart.yaml
+        key: .home
+        value: https://github.com/giantswarm/gitops-server-app
+    - name: set the icon url
+      yq:
+        op: Add
+        file: Chart.yaml
+        key: .icon
+        value: https://s.giantswarm.io/app-icons/weaveworks/1/icon_light.svg
+    - name: Add keywords
+      yq:
+        op: Add
+        file: Chart.yaml
+        key: .keywords
+        value: '["gitops", "flux"]'
+    - name: team annotation
+    - name: gs version
+      yq:
+        op: Add
+        key: .annotations."config.giantswarm.io/version"
+        value: 1.x.x
+        file: Chart.yaml
+    - name: yamlfmt

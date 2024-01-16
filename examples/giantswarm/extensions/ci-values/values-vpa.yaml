@@ -1,0 +1,9 @@
+resources:
+  requests:
+    memory: 100Mi
+    cpu: 70m
+  limits:
+    memory: 700Mi
+    cpu: 400m
+vpa:
+  enabled: true

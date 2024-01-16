@@ -1,0 +1,121 @@
+diff --git a/templates/deployment.yaml b/templates/deployment.yaml
+index c48dda1..b6de3af 100644
+--- a/templates/deployment.yaml
++++ b/templates/deployment.yaml
+@@ -24,12 +24,28 @@ spec:
+       {{- end }}
+       serviceAccountName: {{ include "zot.serviceAccountName" . }}
+       securityContext:
+-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
++        fsGroup: 1337
++        {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++        {{- with .Values.podSeccompProfile }}
++        seccompProfile:
++          {{- . | toYaml | nindent 10 }}
++        {{- end }}
++        {{- end }}
+       containers:
+         - name: {{ .Chart.Name }}
+           securityContext:
+-            {{- toYaml .Values.securityContext | nindent 12 }}
+-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
++            {{- with .Values.containerSecurityContext }}
++            {{- . | toYaml | nindent 12 }}
++            {{- end }}
++            readOnlyRootFilesystem: true
++            runAsUser: 100
++            {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++            {{- with .Values.seccompProfile }}
++            seccompProfile:
++              {{- . | toYaml | nindent 14 }}
++            {{- end }}
++            {{- end }}
++          image: "{{ .Values.image.registry }}/{{ .Values.image.image }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+           imagePullPolicy: {{ .Values.image.pullPolicy }}
+           env:
+             {{- toYaml .Values.env | nindent 12 }}
+diff --git a/templates/tests/test-connection-fails.yaml b/templates/tests/test-connection-fails.yaml
+index 0e7a059..6ec4916 100644
+--- a/templates/tests/test-connection-fails.yaml
++++ b/templates/tests/test-connection-fails.yaml
+@@ -8,8 +8,28 @@ metadata:
+     "helm.sh/hook": test
+     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+ spec:
++  securityContext:
++    fsGroup: 1337
++    {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++    {{- with .Values.podSeccompProfile }}
++    seccompProfile:
++      {{- . | toYaml | nindent 10 }}
++    {{- end }}
++    {{- end }}
+   containers:
+     - name: wget
++      securityContext:
++        {{- with .Values.containerSecurityContext }}
++        {{- . | toYaml | nindent 12 }}
++        {{- end }}
++        readOnlyRootFilesystem: true
++        runAsUser: 100
++        {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++        {{- with .Values.seccompProfile }}
++        seccompProfile:
++          {{- . | toYaml | nindent 14 }}
++        {{- end }}
++        {{- end }}
+       image: alpine:3.18
+       command:
+       - sh
+diff --git a/templates/tests/test-connection.yaml b/templates/tests/test-connection.yaml
+index 59c64b4..2ded317 100644
+--- a/templates/tests/test-connection.yaml
++++ b/templates/tests/test-connection.yaml
+@@ -8,8 +8,28 @@ metadata:
+     "helm.sh/hook": test
+     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded,hook-failed
+ spec:
++  securityContext:
++    fsGroup: 1337
++    {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++    {{- with .Values.podSeccompProfile }}
++    seccompProfile:
++      {{- . | toYaml | nindent 10 }}
++    {{- end }}
++    {{- end }}
+   containers:
+     - name: wget
++      securityContext:
++        {{- with .Values.containerSecurityContext }}
++        {{- . | toYaml | nindent 12 }}
++        {{- end }}
++        readOnlyRootFilesystem: true
++        runAsUser: 100
++        {{- if ge (int .Capabilities.KubeVersion.Minor) 19 }}
++        {{- with .Values.seccompProfile }}
++        seccompProfile:
++          {{- . | toYaml | nindent 14 }}
++        {{- end }}
++        {{- end }}
+       image: alpine:3.18
+       command:
+       - sh
+diff --git a/values.yaml b/values.yaml
+index ac7f0f0..9730e9c 100644
+--- a/values.yaml
++++ b/values.yaml
+@@ -3,10 +3,10 @@
+ # Declare variables to be passed into your templates.
+ replicaCount: 1
+ image:
+-  repository: ghcr.io/project-zot/zot-linux-amd64
+-  pullPolicy: IfNotPresent
+-  # Overrides the image tag whose default is the chart appVersion.
+-  tag: "v2.0.0"
++  registry: gsoci.azurecr.io
++  image: dummy/zot-linux
++  pullPolicy: Always
++  tag: ""
+ serviceAccount:
+   # Specifies whether a service account should be created
+   create: true
